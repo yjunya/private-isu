@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  benchmarker:
+    build: .
+    command: ["/opt/go/bin/benchmarker", "-t", "http://host.docker.internal", "-u", "/opt/go/userdata"]
+    network_mode: "host"
+
