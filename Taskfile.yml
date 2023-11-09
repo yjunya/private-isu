@@ -1,0 +1,57 @@
+version: '3'
+
+tasks:
+  hello:
+    cmds:
+      - echo 'Hello World from Task!'
+    silent: true
+
+  data:setup:
+    cmds:
+      - |
+        rm -rf webapp/sql/dump.sql benchmarker/userdata/img
+        cd webapp/sql && \
+        curl -L -O https://github.com/catatsuy/private-isu/releases/download/img/dump.sql.bz2 && \
+        bunzip2 dump.sql.bz2 && \
+        mv 0000_dump.sql
+      - cd benchmarker/userdata && \
+        curl -L -O https://github.com/catatsuy/private-isu/releases/download/img/img.zip && \
+        unzip img.zip && \
+        rm img.zip
+
+  app:build:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml build --no-cache 
+
+  app:up:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml up -d
+
+  app:down:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml down
+
+  app:down-with-volumes:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml down --volumes
+
+  app:logs:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml logs -f --tail=100 {{.CLI_ARGS}}
+
+  app:ps:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml ps
+
+  app:exec:
+    cmds:
+      - docker compose -f ./webapp/docker-compose.yml exec {{.CLI_ARGS}} /bin/bash
+
+  benchmarker:up:
+    cmds:
+      - docker compose -f ./benchmarker/docker-compose.yml up
+
+  benchmarker:down:
+    cmds:
+      - docker compose -f ./benchmarker/docker-compose.yml down
+
