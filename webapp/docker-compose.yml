@@ -41,6 +41,7 @@ services:
       - mysql:/var/lib/mysql
       - ./etc/my.cnf:/etc/my.cnf
       - ./sql:/docker-entrypoint-initdb.d
+      - ./tmp:/tmp
     ports:
       - "3306:3306"
     deploy:
