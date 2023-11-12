@@ -37,7 +37,7 @@ tasks:
 
   app:logs:
     cmds:
-      - docker compose -f ./webapp/docker-compose.yml logs -f --tail=100 {{.CLI_ARGS}}
+      - docker compose -f ./webapp/docker-compose.yml logs -f --tail=100 
 
   app:ps:
     cmds:
@@ -54,4 +54,8 @@ tasks:
   benchmarker:down:
     cmds:
       - docker compose -f ./benchmarker/docker-compose.yml down
+
+  docker:top:
+    cmds:
+      - docker stats
 
