@@ -1,4 +1,4 @@
-# 1
+# 1 dbにindexを貼るまで
 
 1. benchmarkerを実行する
 ```
@@ -78,3 +78,59 @@ ALTER TABLE comments ADD INDEX post_id_idx (post_id, created_at DESC);
 benchmarker-benchmarker-1  | {"pass":true,"score":8111,"success":7763,"fail":0,"messages":[]}
 ```
 - 上がった
+
+# 2 alpでnginxのアクセスログを収集してみる
+1. nginxのlog formatを指定
+/webapp/etc/nginx/conf.d/default.conf に以下を追加
+```
++log_format ltsv "time:$time_local"
++              "\thost:$remote_addr"
++              "\tforwardedfor:$http_x_forwarded_for"
++              "\treq:$request"
++              "\tstatus:$status"
++              "\tmethod:$request_method"
++              "\turi:$request_uri"
++              "\tsize:$body_bytes_sent"
++              "\treferer:$http_referer"
++              "\tua:$http_user_agent"
++              "\treqtime:$request_time"
++              "\tcache:$upstream_http_x_cache"
++              "\truntime:$upstream_http_x_runtime"
++              "\tapptime:$upstream_response_time"
++              "\tvhost:$host";
++
++access_log /var/log/nginx/access.log ltsv;
+```
+
+2. alpで解析
+下記を実行
+```
+alp ltsv --file ./webapp/logs/nginx/access.log \
+      --sort sum -r \
+      -m "/posts/[0-9]+,/image/\d+,/@\w+" \
+      -o count,method,uri,min,avg,max,sum
+```
+結果
+```
++-------+--------+--------------------+-------+-------+-------+---------+
+| COUNT | METHOD |        URI         |  MIN  |  AVG  |  MAX  |   SUM   |
++-------+--------+--------------------+-------+-------+-------+---------+
+| 684   | GET    | /                  | 0.069 | 0.449 | 1.606 | 307.410 |
+| 120   | GET    | /posts             | 0.521 | 0.778 | 1.935 | 93.346  |
+| 11858 | GET    | /image/\d+         | 0.000 | 0.006 | 0.736 | 72.984  |
+| 936   | GET    | /posts/[0-9]+      | 0.003 | 0.078 | 0.401 | 72.733  |
+| 137   | GET    | /@\w+              | 0.051 | 0.447 | 1.695 | 61.283  |
+| 514   | POST   | /login             | 0.003 | 0.011 | 0.092 | 5.841   |
+| 116   | POST   | /                  | 0.001 | 0.017 | 0.066 | 2.000   |
+| 61    | POST   | /register          | 0.008 | 0.021 | 0.101 | 1.292   |
+| 1287  | GET    | /favicon.ico       | 0.000 | 0.001 | 0.022 | 1.036   |
+| 58    | POST   | /comment           | 0.004 | 0.015 | 0.075 | 0.892   |
+| 1287  | GET    | /js/timeago.min.js | 0.000 | 0.001 | 0.027 | 0.822   |
+| 1287  | GET    | /css/style.css     | 0.000 | 0.001 | 0.012 | 0.790   |
+| 1287  | GET    | /js/main.js        | 0.001 | 0.001 | 0.013 | 0.779   |
+| 61    | GET    | /admin/banned      | 0.001 | 0.006 | 0.045 | 0.355   |
+| 1     | GET    | /initialize        | 0.208 | 0.208 | 0.208 | 0.208   |
+| 186   | GET    | /login             | 0.000 | 0.001 | 0.014 | 0.139   |
+| 93    | GET    | /logout            | 0.000 | 0.001 | 0.006 | 0.060   |
++-------+--------+--------------------+-------+-------+-------+---------+
+```
